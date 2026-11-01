@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isMember(hid) {
+      return signedIn() &&
+        request.auth.uid in get(/databases/$(database)/documents/households/$(hid)).data.members;
+    }
+
+    // Eigenes Profil: nur man selbst
+    match /users/{uid} {
+      allow read, write: if signedIn() && request.auth.uid == uid;
+    }
+
+    match /households/{hid} {
+      allow read: if signedIn() && request.auth.uid in resource.data.members;
+      allow create: if signedIn()
+        && request.resource.data.owner == request.auth.uid
+        && request.resource.data.members == [request.auth.uid];
+      allow update: if signedIn() && (
+        // Mitglieder dürfen alles ändern, aber nicht den Ersteller
+        (request.auth.uid in resource.data.members
+          && request.resource.data.owner == resource.data.owner)
+        ||
+        // Beitreten per Einladungslink: nur sich selbst hinzufügen
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members', 'memberNames'])
+          && request.resource.data.members.hasAll(resource.data.members)
+          && request.resource.data.members.removeAll(resource.data.members) == [request.auth.uid])
+      );
+      allow delete: if signedIn() && resource.data.owner == request.auth.uid;
+
+      // Einträge und Sparziele: nur Mitglieder
+      match /{sub}/{id} {
+        allow read, write: if isMember(hid);
+      }
+    }
+  }
+}

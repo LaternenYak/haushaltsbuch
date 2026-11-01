@@ -1,0 +1,198 @@
+
+<div class="gate" id="gate">
+  <div class="gate-in">
+    <div class="logo">💶</div>
+    <h1>Haushaltsbuch</h1>
+    <p class="hint" id="gateMsg" style="text-align:center"></p>
+
+    <form id="authForm" hidden autocomplete="on">
+      <div class="seg" id="authSeg">
+        <button type="button" data-m="login" class="on">Anmelden</button>
+        <button type="button" data-m="signup">Registrieren</button>
+      </div>
+      <div id="nameRow" hidden>
+        <label class="f" for="aName">Dein Vorname</label>
+        <input class="inp" id="aName" autocomplete="given-name" maxlength="30">
+      </div>
+      <label class="f" for="aEmail">E-Mail</label>
+      <input class="inp" id="aEmail" type="email" autocomplete="email" inputmode="email">
+      <label class="f" for="aPass">Passwort</label>
+      <input class="inp" id="aPass" type="password" autocomplete="current-password" minlength="6">
+      <div style="margin-top:18px"><button class="btn" type="submit" id="authBtn">Anmelden</button></div>
+      <div style="margin-top:8px"><button type="button" class="btn danger" id="forgotBtn">Passwort vergessen?</button></div>
+    </form>
+
+    <div id="setup" hidden>
+      <div class="card" id="joinCard" hidden>
+        <div style="font-weight:600">📩 Einladung</div>
+        <div class="hint" style="margin-top:4px">Du wurdest zu einem Haushaltsbuch eingeladen. Danach seht ihr beide dieselben Einträge.</div>
+        <div style="margin-top:12px"><button class="btn" id="joinBtn">Beitreten</button></div>
+      </div>
+      <div class="card">
+        <div style="font-weight:600">Neues Haushaltsbuch</div>
+        <label class="f" for="hhInp">Name</label>
+        <input class="inp" id="hhInp" placeholder="z. B. Familie Müller" maxlength="40">
+        <div style="margin-top:12px"><button class="btn" id="createBtn">Anlegen</button></div>
+      </div>
+      <div class="hint" style="text-align:center">Willst du bei jemandem mitmachen? Lass dir den Einladungslink schicken und öffne ihn.</div>
+      <div style="margin-top:12px"><button class="btn danger" id="logoutBtn2">Abmelden</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="app" id="app" hidden>
+  <header>
+    <h1>Haushaltsbuch</h1>
+    <div class="sync" id="sync"><i class="dot"></i><span>Lädt …</span></div>
+  </header>
+
+  <div class="month">
+    <button id="prev" aria-label="Vorheriger Monat">‹</button>
+    <strong id="monthLabel"></strong>
+    <button id="next" aria-label="Nächster Monat">›</button>
+  </div>
+
+  <!-- Übersicht -->
+  <section class="view on" id="v-home">
+    <div class="hero" id="hero">
+      <div class="lbl" id="leftLbl">Übrig in diesem Monat</div>
+      <div class="big" id="left">0 €</div>
+      <div class="sub" id="leftSub"></div>
+    </div>
+    <div class="card summary three">
+      <div><div class="lbl">Einnahmen</div><div class="val pos" id="sIn">0 €</div></div>
+      <div><div class="lbl">Ausgaben</div><div class="val neg" id="sOut">0 €</div></div>
+      <div><div class="lbl">Gespart</div><div class="val sav" id="sSave">0 €</div></div>
+    </div>
+    <div class="card budget" id="budgetCard">
+      <div class="row"><span>Monatsbudget</span><span id="bText"></span></div>
+      <div class="bar"><i id="bBar"></i></div>
+      <div class="hint" id="bHint"></div>
+    </div>
+    <div id="list"></div>
+  </section>
+
+  <!-- Statistik -->
+  <section class="view" id="v-stats">
+    <div class="card">
+      <div style="font-weight:600;margin-bottom:4px">Ausgaben nach Kategorie</div>
+      <div id="catStats"></div>
+    </div>
+    <div class="card">
+      <div style="font-weight:600">Ausgaben der letzten 6 Monate</div>
+      <div class="chart" id="trend"></div>
+    </div>
+  </section>
+
+  <!-- Sparen -->
+  <section class="view" id="v-save">
+    <div class="hero">
+      <div class="lbl">Gespart insgesamt</div>
+      <div class="big" id="saveTotal">0 €</div>
+      <div class="sub" id="saveSub"></div>
+    </div>
+    <div id="goals"></div>
+    <button class="btn ghost" id="newGoal">+ Neues Sparziel</button>
+  </section>
+
+  <!-- Einstellungen -->
+  <section class="view" id="v-settings">
+    <div class="card">
+      <label class="f" for="budgetInp" style="margin-top:0">Monatsbudget für Ausgaben (€)</label>
+      <div class="row2">
+        <input class="inp" id="budgetInp" inputmode="decimal" placeholder="z. B. 1500">
+        <button class="btn" id="saveBudget" style="width:auto;padding:0 20px">Speichern</button>
+      </div>
+      <div class="hint">Leer lassen, um kein Budget zu verwenden.</div>
+    </div>
+    <div class="card">
+      <div style="font-weight:600">👥 Haushalt <span id="hhName" style="color:var(--muted);font-weight:500"></span></div>
+      <div id="members" style="margin-top:6px"></div>
+      <div class="hint">Wer den Einladungslink öffnet und sich anmeldet, kann mitmachen. Schick ihn also nur an Personen, die mitmachen sollen.</div>
+      <div class="row2" style="margin-top:12px">
+        <button class="btn" id="invite">Person einladen</button>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-weight:600">Daten exportieren</div>
+      <div class="hint" style="margin-top:4px">Alle Einträge als CSV (z. B. für Excel). Kopieren und in eine Tabelle einfügen.</div>
+      <div style="margin-top:12px"><button class="btn ghost" id="copyCsv">CSV kopieren</button></div>
+    </div>
+    <div class="card">
+      <div style="font-weight:600">Daten aus der alten App übernehmen</div>
+      <div class="hint" style="margin-top:4px">Tippe in der alten Haushaltsbuch-App unter Einstellungen auf „Für neue App kopieren“ und füge den Text hier ein.</div>
+      <textarea class="inp" id="importTxt" style="margin-top:10px" placeholder="Hier einfügen …"></textarea>
+      <div style="margin-top:10px"><button class="btn ghost" id="importBtn">Übernehmen</button></div>
+    </div>
+    <div class="card">
+      <div class="setrow"><span>Einträge gesamt</span><b id="cntAll">0</b></div>
+      <div class="setrow"><span>Angemeldet als</span><b id="meInfo" style="text-align:right;font-weight:500;font-size:14px"></b></div>
+    </div>
+    <button class="btn ghost" id="leaveBtn" style="margin-bottom:10px">Haushalt verlassen</button>
+    <button class="btn danger" id="logoutBtn">Abmelden</button>
+  </section>
+</div>
+
+<button class="fab" id="fab" aria-label="Eintrag hinzufügen">+</button>
+
+<nav><div class="in">
+  <button class="on" data-v="home"><span>🏠</span>Übersicht</button>
+  <button data-v="save"><span>🐷</span>Sparen</button>
+  <button data-v="stats"><span>📊</span>Statistik</button>
+  <button data-v="settings"><span>⚙️</span>Einstellungen</button>
+</div></nav>
+
+<div class="backdrop" id="backdrop"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true">
+  <div class="grip"></div>
+  <h3 id="sheetTitle">Neuer Eintrag</h3>
+  <form id="form" autocomplete="off">
+    <div class="seg" style="margin-top:14px">
+      <button type="button" data-k="out" class="on out">Ausgabe</button>
+      <button type="button" data-k="in" class="in">Einnahme</button>
+      <button type="button" data-k="save" class="save">Sparen</button>
+    </div>
+    <div class="seg" id="dirSeg" style="margin-top:8px" hidden>
+      <button type="button" data-d="1" class="on save">Einzahlen</button>
+      <button type="button" data-d="-1" class="out">Entnehmen</button>
+    </div>
+    <div class="amount">
+      <input id="amt" inputmode="decimal" placeholder="0,00" aria-label="Betrag"><span style="font-size:32px;font-weight:700">€</span>
+    </div>
+    <label class="f" id="catLbl">Kategorie</label>
+    <div class="cats" id="cats"></div>
+    <label class="f" for="note">Notiz (optional)</label>
+    <input class="inp" id="note" placeholder="z. B. Wocheneinkauf" maxlength="80">
+    <label class="f" for="date">Datum</label>
+    <input class="inp" id="date" type="date">
+    <div style="margin-top:18px"><button class="btn" type="submit" id="saveBtn">Speichern</button></div>
+    <div class="row2" style="margin-top:8px">
+      <button type="button" class="btn ghost" id="cancelBtn">Abbrechen</button>
+      <button type="button" class="btn danger" id="delBtn" hidden>Löschen</button>
+    </div>
+  </form>
+</div>
+
+<div class="sheet" id="gsheet" role="dialog" aria-modal="true">
+  <div class="grip"></div>
+  <h3 id="gTitle">Neues Sparziel</h3>
+  <form id="gform" autocomplete="off">
+    <label class="f" for="gName">Name</label>
+    <input class="inp" id="gName" placeholder="z. B. Urlaub, Notgroschen, neues Auto" maxlength="40">
+    <label class="f">Symbol</label>
+    <div class="emojis" id="gEmojis"></div>
+    <label class="f" for="gTarget">Zielbetrag in € (optional)</label>
+    <input class="inp" id="gTarget" inputmode="decimal" placeholder="z. B. 2000">
+    <label class="f" for="gStart">Schon gespart in € (optional)</label>
+    <input class="inp" id="gStart" inputmode="decimal" placeholder="z. B. 350">
+    <div class="hint">Geld, das du vorher schon zurückgelegt hast. Es zählt nicht als Ausgabe in diesem Monat.</div>
+    <div style="margin-top:18px"><button class="btn" type="submit">Speichern</button></div>
+    <div class="row2" style="margin-top:8px">
+      <button type="button" class="btn ghost" id="gCancel">Abbrechen</button>
+      <button type="button" class="btn danger" id="gDel" hidden>Löschen</button>
+    </div>
+  </form>
+</div>
+
+<div class="toast" id="toast"></div>
+

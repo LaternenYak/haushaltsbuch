@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Haushalt">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Haushaltsbuch</title>
+<style>
+
+:root{
+  --bg:#f4f5f7; --card:#fff; --text:#1c1f24; --muted:#6b7280; --line:#e5e7eb;
+  --brand:#0f766e; --brand-soft:#ccfbf1; --out:#c2410c; --in:#15803d; --warn:#b91c1c;
+  --radius:18px; --shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0f1115;--card:#1a1d23;--text:#eef0f3;--muted:#9aa1ac;--line:#2a2e36;
+  --brand:#2dd4bf;--brand-soft:#123b37;--out:#fb923c;--in:#4ade80;--warn:#f87171;
+  --shadow:none}
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);
+  font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+.app{max-width:560px;margin:0 auto;min-height:100vh;
+  padding:calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 96px)}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+header h1{font-size:22px;margin:0;font-weight:700}
+.sync{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.dot.ok{background:var(--in)} .dot.local{background:#eab308}
+.month{display:flex;align-items:center;justify-content:space-between;background:var(--card);
+  border-radius:var(--radius);padding:6px;box-shadow:var(--shadow);margin-bottom:12px}
+.month button{border:0;background:transparent;width:44px;height:44px;border-radius:12px;font-size:22px}
+.month button:active{background:var(--line)}
+.month strong{font-size:17px}
+.card{background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:12px}
+.summary{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.summary .lbl{font-size:13px;color:var(--muted)}
+.summary .val{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.summary.three{grid-template-columns:1fr 1fr 1fr;gap:8px}
+.summary.three .val{font-size:16px}
+.hero{background:var(--brand);color:#fff;border-radius:22px;padding:20px;margin-bottom:12px;box-shadow:0 8px 24px rgba(15,118,110,.25)}
+.hero.minus{background:var(--out);box-shadow:0 8px 24px rgba(194,65,12,.25)}
+.hero .lbl{font-size:14px;opacity:.85}
+.hero .big{font-size:40px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em;margin:2px 0 4px}
+.hero .sub{font-size:14px;opacity:.9}
+@media (prefers-color-scheme:dark){.hero{color:#042f2e}.hero.minus{color:#2a1205}}
+.sav{color:var(--brand)}
+.goal{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:12px}
+.goal .head{display:flex;align-items:center;gap:12px;border:0;background:transparent;width:100%;text-align:left;padding:0}
+.goal .head .t{flex:1;min-width:0}
+.goal .head b{display:block;font-size:17px}
+.goal .head span{font-size:13px;color:var(--muted)}
+.goal .amt{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;margin:12px 0 8px}
+.goal .amt small{font-size:14px;color:var(--muted);font-weight:500}
+.goal .acts{display:flex;gap:8px;margin-top:14px}
+.goal .acts .btn{padding:11px;font-size:15px}
+.emojis{display:flex;flex-wrap:wrap;gap:8px}
+.emojis button{width:48px;height:48px;border-radius:12px;border:2px solid transparent;background:var(--bg);font-size:24px}
+.emojis button.on{border-color:var(--brand);background:var(--brand-soft)}
+.neg{color:var(--out)} .pos{color:var(--in)}
+.budget .row{display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--brand);border-radius:6px;transition:width .3s}
+.bar>i.over{background:var(--warn)}
+.hint{font-size:13px;color:var(--muted);margin-top:8px}
+h2{font-size:14px;color:var(--muted);font-weight:600;margin:20px 4px 8px;text-transform:uppercase;letter-spacing:.04em}
+.day{font-size:13px;color:var(--muted);margin:14px 4px 6px;display:flex;justify-content:space-between}
+.list{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.tx{display:flex;align-items:center;gap:12px;padding:12px 14px;border:0;background:transparent;width:100%;text-align:left}
+.tx+.tx{border-top:1px solid var(--line)}
+.tx:active{background:var(--line)}
+.ico{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:20px;flex:none}
+.tx .t{flex:1;min-width:0}
+.tx .t b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx .t span{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.tx .a{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.empty{text-align:center;color:var(--muted);padding:40px 20px}
+.empty div{font-size:40px;margin-bottom:8px}
+.fab{position:fixed;right:max(20px,calc(50% - 260px));bottom:calc(env(safe-area-inset-bottom) + 84px);
+  width:60px;height:60px;border-radius:50%;border:0;background:var(--brand);color:#fff;font-size:32px;
+  box-shadow:0 6px 20px rgba(15,118,110,.4);z-index:5}
+@media (prefers-color-scheme:dark){.fab{color:#042f2e}}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);
+  display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);z-index:4}
+nav .in{display:flex;max-width:560px;width:100%}
+nav button{flex:1;border:0;background:transparent;padding:10px 0 12px;font-size:11px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px}
+nav button span{font-size:22px;line-height:1}
+nav button.on{color:var(--brand);font-weight:600}
+.view{display:none}.view.on{display:block}
+/* stats */
+.catrow{display:flex;align-items:center;gap:12px;padding:10px 0}
+.catrow+.catrow{border-top:1px solid var(--line)}
+.catrow .t{flex:1}
+.catrow .t div{display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px}
+.catrow .t div b{font-variant-numeric:tabular-nums}
+.chart{display:flex;align-items:flex-end;gap:8px;height:140px;padding-top:10px}
+.chart .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+.chart .col i{display:block;width:100%;max-width:34px;background:var(--brand);border-radius:6px 6px 2px 2px;min-height:2px}
+.chart .col.cur i{background:var(--out)}
+.chart .col span{font-size:11px;color:var(--muted)}
+/* forms */
+label.f{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px}
+.inp{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--bg);font-size:16px}
+.inp:focus{outline:2px solid var(--brand);border-color:transparent}
+.btn{border:0;border-radius:14px;padding:14px;font-weight:600;width:100%;background:var(--brand);color:#fff;font-size:16px}
+@media (prefers-color-scheme:dark){.btn{color:#042f2e}}
+.btn.ghost{background:var(--line);color:var(--text)}
+.btn.danger{background:transparent;color:var(--warn)}
+.btn:disabled{opacity:.5}
+.row2{display:flex;gap:10px}
+.seg{display:flex;background:var(--bg);border-radius:12px;padding:4px;gap:4px}
+.seg button{flex:1;border:0;background:transparent;padding:10px;border-radius:9px;font-weight:600;color:var(--muted)}
+.seg button.on{background:var(--card);color:var(--text);box-shadow:var(--shadow)}
+.seg button.on.out{color:var(--out)} .seg button.on.in{color:var(--in)} .seg button.on.save{color:var(--brand)}
+.amount{display:flex;align-items:center;justify-content:center;gap:6px;margin:18px 0 6px}
+.amount input{border:0;background:transparent;font-size:44px;font-weight:700;width:4.2ch;max-width:80%;text-align:right;font-variant-numeric:tabular-nums}
+.amount input:focus{outline:none}
+.cats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.cats button{border:2px solid transparent;background:var(--bg);border-radius:14px;padding:10px 4px;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--text)}
+.cats button span{font-size:22px}
+.cats button.on{border-color:var(--brand);background:var(--brand-soft)}
+/* sheet */
+.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .2s;z-index:10}
+.backdrop.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;margin:0 auto;max-width:560px;background:var(--card);
+  border-radius:22px 22px 0 0;padding:10px 18px calc(env(safe-area-inset-bottom) + 18px);
+  transform:translateY(105%);transition:transform .25s ease;z-index:11;max-height:92vh;overflow:auto}
+.sheet.on{transform:none}
+.grip{width:40px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 10px}
+.sheet h3{margin:0;font-size:18px;text-align:center}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 160px);transform:translateX(-50%) translateY(20px);
+  background:#111;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;transition:.2s;z-index:20;pointer-events:none;max-width:90vw;text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.setrow{display:flex;justify-content:space-between;align-items:center;padding:12px 0}
+.setrow+.setrow{border-top:1px solid var(--line)}
+.by{font-style:normal}
+body.ro .fab,body.ro #newGoal,body.ro .goal .acts,body.ro #saveBtn,body.ro #delBtn,body.ro #gDel,body.ro #saveBudget{display:none!important}
+.banner{background:#fef3c7;color:#78350f;border-radius:14px;padding:12px 14px;font-size:14px;margin-bottom:12px}
+@media (prefers-color-scheme:dark){.banner{background:#3a2a06;color:#fde68a}}
+ol.steps{margin:8px 0 0;padding-left:20px;font-size:14px;line-height:1.5}
+textarea.inp{min-height:120px;font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.gate{min-height:100vh;display:flex;justify-content:center;padding:calc(env(safe-area-inset-top) + 40px) 20px calc(env(safe-area-inset-bottom) + 30px)}
+.gate-in{width:100%;max-width:420px}
+.gate .logo{font-size:56px;text-align:center}
+.gate h1{text-align:center;margin:4px 0 4px;font-size:26px}
+.gate form .seg{margin-top:16px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <div class="gate-in">
+    <div class="logo">💶</div>
+    <h1>Haushaltsbuch</h1>
+    <p class="hint" id="gateMsg" style="text-align:center"></p>
+
+    <form id="authForm" hidden autocomplete="on">
+      <div class="seg" id="authSeg">
+        <button type="button" data-m="login" class="on">Anmelden</button>
+        <button type="button" data-m="signup">Registrieren</button>
+      </div>
+      <div id="nameRow" hidden>
+        <label class="f" for="aName">Dein Vorname</label>
+        <input class="inp" id="aName" autocomplete="given-name" maxlength="30">
+      </div>
+      <label class="f" for="aEmail">E-Mail</label>
+      <input class="inp" id="aEmail" type="email" autocomplete="email" inputmode="email">
+      <label class="f" for="aPass">Passwort</label>
+      <input class="inp" id="aPass" type="password" autocomplete="current-password" minlength="6">
+      <div style="margin-top:18px"><button class="btn" type="submit" id="authBtn">Anmelden</button></div>
+      <div style="margin-top:8px"><button type="button" class="btn danger" id="forgotBtn">Passwort vergessen?</button></div>
+    </form>
+
+    <div id="setup" hidden>
+      <div class="card" id="joinCard" hidden>
+        <div style="font-weight:600">📩 Einladung</div>
+        <div class="hint" style="margin-top:4px">Du wurdest zu einem Haushaltsbuch eingeladen. Danach seht ihr beide dieselben Einträge.</div>
+        <div style="margin-top:12px"><button class="btn" id="joinBtn">Beitreten</button></div>
+      </div>
+      <div class="card">
+        <div style="font-weight:600">Neues Haushaltsbuch</div>
+        <label class="f" for="hhInp">Name</label>
+        <input class="inp" id="hhInp" placeholder="z. B. Familie Müller" maxlength="40">
+        <div style="margin-top:12px"><button class="btn" id="createBtn">Anlegen</button></div>
+      </div>
+      <div class="hint" style="text-align:center">Willst du bei jemandem mitmachen? Lass dir den Einladungslink schicken und öffne ihn.</div>
+      <div style="margin-top:12px"><button class="btn danger" id="logoutBtn2">Abmelden</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="app" id="app" hidden>
+  <header>
+    <h1>Haushaltsbuch</h1>
+    <div class="sync" id="sync"><i class="dot"></i><span>Lädt …</span></div>
+  </header>
+
+  <div class="month">
+    <button id="prev" aria-label="Vorheriger Monat">‹</button>
+    <strong id="monthLabel"></strong>
+    <button id="next" aria-label="Nächster Monat">›</button>
+  </div>
+
+  <!-- Übersicht -->
+  <section class="view on" id="v-home">
+    <div class="hero" id="hero">
+      <div class="lbl" id="leftLbl">Übrig in diesem Monat</div>
+      <div class="big" id="left">0 €</div>
+      <div class="sub" id="leftSub"></div>
+    </div>
+    <div class="card summary three">
+      <div><div class="lbl">Einnahmen</div><div class="val pos" id="sIn">0 €</div></div>
+      <div><div class="lbl">Ausgaben</div><div class="val neg" id="sOut">0 €</div></div>
+      <div><div class="lbl">Gespart</div><div class="val sav" id="sSave">0 €</div></div>
+    </div>
+    <div class="card budget" id="budgetCard">
+      <div class="row"><span>Monatsbudget</span><span id="bText"></span></div>
+      <div class="bar"><i id="bBar"></i></div>
+      <div class="hint" id="bHint"></div>
+    </div>
+    <div id="list"></div>
+  </section>
+
+  <!-- Statistik -->
+  <section class="view" id="v-stats">
+    <div class="card">
+      <div style="font-weight:600;margin-bottom:4px">Ausgaben nach Kategorie</div>
+      <div id="catStats"></div>
+    </div>
+    <div class="card">
+      <div style="font-weight:600">Ausgaben der letzten 6 Monate</div>
+      <div class="chart" id="trend"></div>
+    </div>
+  </section>
+
+  <!-- Sparen -->
+  <section class="view" id="v-save">
+    <div class="hero">
+      <div class="lbl">Gespart insgesamt</div>
+      <div class="big" id="saveTotal">0 €</div>
+      <div class="sub" id="saveSub"></div>
+    </div>
+    <div id="goals"></div>
+    <button class="btn ghost" id="newGoal">+ Neues Sparziel</button>
+  </section>
+
+  <!-- Einstellungen -->
+  <section class="view" id="v-settings">
+    <div class="card">
+      <label class="f" for="budgetInp" style="margin-top:0">Monatsbudget für Ausgaben (€)</label>
+      <div class="row2">
+        <input class="inp" id="budgetInp" inputmode="decimal" placeholder="z. B. 1500">
+        <button class="btn" id="saveBudget" style="width:auto;padding:0 20px">Speichern</button>
+      </div>
+      <div class="hint">Leer lassen, um kein Budget zu verwenden.</div>
+    </div>
+    <div class="card">
+      <div style="font-weight:600">👥 Haushalt <span id="hhName" style="color:var(--muted);font-weight:500"></span></div>
+      <div id="members" style="margin-top:6px"></div>
+      <div class="hint">Wer den Einladungslink öffnet und sich anmeldet, kann mitmachen. Schick ihn also nur an Personen, die mitmachen sollen.</div>
+      <div class="row2" style="margin-top:12px">
+        <button class="btn" id="invite">Person einladen</button>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-weight:600">Daten exportieren</div>
+      <div class="hint" style="margin-top:4px">Alle Einträge als CSV (z. B. für Excel). Kopieren und in eine Tabelle einfügen.</div>
+      <div style="margin-top:12px"><button class="btn ghost" id="copyCsv">CSV kopieren</button></div>
+    </div>
+    <div class="card">
+      <div style="font-weight:600">Daten aus der alten App übernehmen</div>
+      <div class="hint" style="margin-top:4px">Tippe in der alten Haushaltsbuch-App unter Einstellungen auf „Für neue App kopieren“ und füge den Text hier ein.</div>
+      <textarea class="inp" id="importTxt" style="margin-top:10px" placeholder="Hier einfügen …"></textarea>
+      <div style="margin-top:10px"><button class="btn ghost" id="importBtn">Übernehmen</button></div>
+    </div>
+    <div class="card">
+      <div class="setrow"><span>Einträge gesamt</span><b id="cntAll">0</b></div>
+      <div class="setrow"><span>Angemeldet als</span><b id="meInfo" style="text-align:right;font-weight:500;font-size:14px"></b></div>
+    </div>
+    <button class="btn ghost" id="leaveBtn" style="margin-bottom:10px">Haushalt verlassen</button>
+    <button class="btn danger" id="logoutBtn">Abmelden</button>
+  </section>
+</div>
+
+<button class="fab" id="fab" aria-label="Eintrag hinzufügen">+</button>
+
+<nav><div class="in">
+  <button class="on" data-v="home"><span>🏠</span>Übersicht</button>
+  <button data-v="save"><span>🐷</span>Sparen</button>
+  <button data-v="stats"><span>📊</span>Statistik</button>
+  <button data-v="settings"><span>⚙️</span>Einstellungen</button>
+</div></nav>
+
+<div class="backdrop" id="backdrop"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true">
+  <div class="grip"></div>
+  <h3 id="sheetTitle">Neuer Eintrag</h3>
+  <form id="form" autocomplete="off">
+    <div class="seg" style="margin-top:14px">
+      <button type="button" data-k="out" class="on out">Ausgabe</button>
+      <button type="button" data-k="in" class="in">Einnahme</button>
+      <button type="button" data-k="save" class="save">Sparen</button>
+    </div>
+    <div class="seg" id="dirSeg" style="margin-top:8px" hidden>
+      <button type="button" data-d="1" class="on save">Einzahlen</button>
+      <button type="button" data-d="-1" class="out">Entnehmen</button>
+    </div>
+    <div class="amount">
+      <input id="amt" inputmode="decimal" placeholder="0,00" aria-label="Betrag"><span style="font-size:32px;font-weight:700">€</span>
+    </div>
+    <label class="f" id="catLbl">Kategorie</label>
+    <div class="cats" id="cats"></div>
+    <label class="f" for="note">Notiz (optional)</label>
+    <input class="inp" id="note" placeholder="z. B. Wocheneinkauf" maxlength="80">
+    <label class="f" for="date">Datum</label>
+    <input class="inp" id="date" type="date">
+    <div style="margin-top:18px"><button class="btn" type="submit" id="saveBtn">Speichern</button></div>
+    <div class="row2" style="margin-top:8px">
+      <button type="button" class="btn ghost" id="cancelBtn">Abbrechen</button>
+      <button type="button" class="btn danger" id="delBtn" hidden>Löschen</button>
+    </div>
+  </form>
+</div>
+
+<div class="sheet" id="gsheet" role="dialog" aria-modal="true">
+  <div class="grip"></div>
+  <h3 id="gTitle">Neues Sparziel</h3>
+  <form id="gform" autocomplete="off">
+    <label class="f" for="gName">Name</label>
+    <input class="inp" id="gName" placeholder="z. B. Urlaub, Notgroschen, neues Auto" maxlength="40">
+    <label class="f">Symbol</label>
+    <div class="emojis" id="gEmojis"></div>
+    <label class="f" for="gTarget">Zielbetrag in € (optional)</label>
+    <input class="inp" id="gTarget" inputmode="decimal" placeholder="z. B. 2000">
+    <label class="f" for="gStart">Schon gespart in € (optional)</label>
+    <input class="inp" id="gStart" inputmode="decimal" placeholder="z. B. 350">
+    <div class="hint">Geld, das du vorher schon zurückgelegt hast. Es zählt nicht als Ausgabe in diesem Monat.</div>
+    <div style="margin-top:18px"><button class="btn" type="submit">Speichern</button></div>
+    <div class="row2" style="margin-top:8px">
+      <button type="button" class="btn ghost" id="gCancel">Abbrechen</button>
+      <button type="button" class="btn danger" id="gDel" hidden>Löschen</button>
+    </div>
+  </form>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="firebase-config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
